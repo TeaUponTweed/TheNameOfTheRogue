@@ -1,0 +1,9 @@
+[package]
+name = "wakka"
+version = "0.0.1"
+authors = ["Michael Mason <TeaUponTweed@gmail.com>"]
+
+[dependencies]
+image = "*"
+num = "*"
+rand = "*"
