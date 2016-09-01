@@ -7,3 +7,4 @@ authors = ["Michael Mason <TeaUponTweed@gmail.com>"]
 image = "*"
 num = "*"
 rand = "*"
+specs = "*"

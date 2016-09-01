@@ -1,6 +1,7 @@
 // https://github.com/PistonDevelopers/image
 extern crate image;
 extern crate rand;
+extern crate specs;
 
 use std::fs::File;
 use std::path::Path;
@@ -33,6 +34,53 @@ impl PartialEq for RegionPoint {
     }
 }
 
+#[derive(Clone, Debug)]
+struct Position(f32, f32);
+impl specs::Component for Position {
+    type Storage = specs::VecStorage<Position>;
+}
+
+#[derive(Clone, Debug)]
+struct Velocity(f32, f32);
+impl specs::Component for Velocity {
+    type Storage = specs::VecStorage<Velocity>;
+}
+fn main() {
+    let mut planner = {
+        let mut w = specs::World::new();
+        w.register::<Position>();
+        w.register::<Velocity>();
+        w.create_now().with(Position(3.0, 4.0)).build();
+        w.create_now().with(Position(3.0, 4.0)).build();
+        w.create_now().with(Position(0.0, 7.0)).with(Velocity(1.0, 1.0)).build();
+        specs::Planner::<()>::new(w, 2)
+    };
+    loop {
+        planner.run0w1r(|pos: &Position| {
+            println!("Entity x {} y {}", pos.0, pos.1);
+        });
+        planner.run1w1r(|pos: &mut Position, vel: &Velocity| {
+            pos.0 += vel.0;
+            pos.1 += vel.1;
+        });
+        planner.wait();
+    }
+}
+/*
+#[derive(Debug)]
+enum Component {
+    Position{x: f32, y: f32},
+    Velocity{dx: f32, dy: f32},
+}
+
+#[derive(Debug)]
+struct Enity {
+    components: Vec<Component>,
+}
+*/
+// #[cfg(feature="parallel")]
+
+/*
 fn main() {
     let imgx = 4000;
     let imgy = 4000;
@@ -61,6 +109,7 @@ fn main() {
     let ref mut fout = File::create(&Path::new("map.png")).unwrap();
     let _ = image::DynamicImage::ImageRgb8(imgbuf).save(fout, image::PNG);
 }
+*/
 /*
 #[derive(Debug)]
 enum Biome { // 3x3 matrix, random walk between them (need characteristic spites[s] too)
@@ -75,6 +124,8 @@ enum Biome { // 3x3 matrix, random walk between them (need characteristic spites
     Tundra(color: image::Rgb<u8>),
 }
 */
+
+/*
 #[derive(Debug)]
 struct Biome {
     color: image::Rgb<u8>,
@@ -89,6 +140,7 @@ const BIOMES: [Biome; 9] = [Swamp {color: image::Rgb([25  as u8, 51  as u8, 0   
                             Desert{color: image::Rgb([255 as u8, 255 as u8, 204 as u8])},
                             Steppe{color: image::Rgb([255 as u8, 204 as u8, 255 as u8])},
                             Tundra{color: image::Rgb([204 as u8, 255 as u8, 255 as u8])}];
+*/
 /*
 want representation of user input.
 enum Input {
