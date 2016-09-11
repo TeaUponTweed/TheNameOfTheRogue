@@ -2,6 +2,8 @@ extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate piston;
+extern crate vec_map;
+extern crate clock_ticks;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -9,116 +11,53 @@ use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL};
 use graphics::rectangle::square;
+#[macro_use] mod ecs;
+use ecs::*;
+use vec_map::VecMap;
 
-#[derive(Debug)]
-// struct Entity {
-//     x: i32,
-//     y: i32,
-// }
-enum Compontent {
-    Position(f64, f64),
-    Velocity(f64, f64),
-    Size(f64),
-}
+#[derive(Copy, Clone, Debug)]
+pub struct Pos(f64, f64);
+#[derive(Copy, Clone, Debug)]
+pub struct Vel(f64, f64);
 
-#[derive(Debug)]
-struct Entity {
-    components: Vec<Compontent>,
-}
-
-// e.components.filter_map(|c| {
-//     match c {
-//         Compontent::Position(x, y) => Compontent::Position(x, y),
-//         _ => None,
-//     }
-// })
-
-static TILE_WIDTH: u8 = 8;
-// pub struct App {
-//     gl: GlGraphics, // OpenGL drawing backend.
-//     enities: Vec<Entity>,
-// }
-
-// impl App {
-//     fn render(&mut self, args: &RenderArgs) {
-//         use graphics::*;
-
-//         const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-//         const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-
-//         let square = rectangle::square(0.0, 0.0, 50.0);
-
-//         self.gl.draw(args.viewport(), |c, gl| {
-//             // Clear the screen.
-//             clear(GREEN, gl);
-//             for entity in self.entities {
-//                 let transform = c.transform.trans(entity.x, entity.y)
-//                                            .trans(-25.0, -25.0);
-//                 rectangle(RED, square, transform, gl);
-//             }
-//         });
-//     }
-
-//     fn new() -> App P
-// }
-
-fn main() {
-    use Compontent::*;
-    let mut e = Entity{ components: vec![Position(1.0, 3.0), Velocity(4.0, 6.0), Size(10.0), Position(12.3, 45.5)]};
-
-    let iter = e.components.iter().filter_map(|c| {
-        match *c {
-            Position(x, y) => Some(Position(x, y)),
-            _ => None,
-        }
-    });
-    for el in iter {
-        println!("{:?}", el);
+world!{
+    name: Game,
+    components: {
+        pos => Pos,
+        vel => Vel
+    },
+    processors: {
+        movement => Movement for [pos, vel]
     }
-
-    /*
-    let opengl = OpenGL::V3_2;
-    // Create an Glutin window.
-    let mut window: Window = WindowSettings::new(
-            "spinning-square",
-            [200, 200]
-        ).opengl(opengl)
-         .exit_on_esc(true)
-         .build()
-         .unwrap();
-    let mut gl = GlGraphics::new(opengl);
-    let mut entities = Vec::new();
-    let mut cursor = [0.0, 0.0];
-    let mut events = window.events();
-    while let Some(e) = events.next(&mut window) {
-        e.mouse_cursor(|x, y| {
-            cursor = [x, y];
-        });
-        use piston::input::mouse::MouseButton;
-        if let Some(Button::Mouse(button)) = e.press_args() {
-            match button {
-                MouseButton::Right => {entities.push( Entity { x: cursor[0].floor() as i32, 
-                                                                 y: cursor[1].floor() as i32});},
-                b                   => {println!("Pressed mouse button '{:?}'", b);},
-            }
-        }
-
-        if let Some(r) = e.render_args() {
-            gl.draw(r.viewport(), |c, gl| {
-                use graphics::*;
-
-                clear([0.0, 0.0, 0.0, 1.0], gl);
-                let square = rectangle::square(0.0, 0.0, TILE_WIDTH as f64);
-
-                const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-                for &Entity{x, y} in &entities {
-                    let transform = c.transform.trans(x as f64, y as f64)
-                                     .trans(-(TILE_WIDTH as f64)/2.0, -(TILE_WIDTH as f64)/2.0);
-
-                    rectangle(RED, square, transform, gl);
-                }
-            });
+}
+#[derive(Copy, Default, Clone, Debug)]
+pub struct Movement;
+impl Movement {
+    fn run(&mut self, delta: f64, entities: &[Entity], pos: &mut Components<Pos>, vel: &Components<Vel>) {
+        for &e in entities.iter() {
+            let Vel(vx, vy) = vel[e];
+            let &mut Pos(ref mut x, ref mut y) = &mut pos[e];
+            *x += vx * delta;
+            *y += vy * delta;
         }
     }
-    */
+}
+
+
+pub fn main() {
+    let mut world:Game = World::new();
+    let entity = world.create();
+    let entity1 = world.create();
+    // println!("{:?}", entity1);
+    world.pos.insert(entity, Pos(1.0, -2.0));
+    world.pos.insert(entity1, Pos(10.0, 10.0));
+    world.vel.insert(entity, Vel(3.0, 2.0));
+    world.vel.insert(entity1, Vel(30.0, 20.0));
+    for _ in 0..10 {
+        world.update(1.0);
+        for (id, &el) in world.pos.iter() {
+            // println!("{:?}", id);
+            println!("{:?}\n", el);
+        }
+    }
 }
