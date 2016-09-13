@@ -10,3 +10,5 @@ authors = [
 [dependencies]
 specs = "*"
 ncurses = "*"
+futures = "*"
+libc = "*"

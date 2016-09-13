@@ -1,6 +1,11 @@
 extern crate specs;
+extern crate libc;
 extern crate ncurses;
+extern crate futures;
 
+mod display;
+
+// use libc::{ c_char, c_int, c_short, c_uint, c_ulong, c_void };
 use std::{thread, time};
 
 struct Pos(f32, f32);
@@ -18,9 +23,9 @@ impl specs::Component for Disp {
     type Storage = specs::VecStorage<Disp>;
 }
 
-pub fn main() {
-    ncurses::initscr();
 
+pub fn main() {
+    // ncurses_setup();
     let mut planner : specs::Planner<()> = {
         let mut w = specs::World::new();
         // All components types should be registered before working with them
